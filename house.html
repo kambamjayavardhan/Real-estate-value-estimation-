@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PropSmart India — Property Estimator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --surface: #141927;
+            --surface2: #1c2235;
+            --border: rgba(255,255,255,0.07);
+            --accent: #6c63ff;
+            --accent2: #00d4aa;
+            --text: #e8eaf0;
+            --muted: #6b7280;
+            --error: #ff6b6b;
+            --gold: #f5c842;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+    
+        .bg-mesh {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 70% 50% at 10% 10%, rgba(108,99,255,0.1) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 90% 90%, rgba(0,212,170,0.07) 0%, transparent 55%);
+            animation: meshMove 14s ease-in-out infinite alternate;
+        }
+        @keyframes meshMove {
+            from { transform: scale(1); }
+            to { transform: scale(1.04) rotate(1deg); }
+        }
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+   
+        .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px 60px; }
+
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 0; margin-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .brand-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px; font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+        .brand-name span { color: var(--accent2); }
+        .user-row {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .user-badge {
+            font-size: 13px; color: var(--muted);
+        }
+        .user-badge strong { color: var(--text); }
+        .logout-btn {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--muted); font-size: 12px;
+            padding: 6px 14px; border-radius: 8px;
+            cursor: pointer; font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .logout-btn:hover { border-color: var(--error); color: var(--error); }
+
+        /* HERO */
+        .hero { text-align: center; padding: 40px 0 36px; }
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 5vw, 46px);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+        .hero-title .grad {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-sub { font-size: 16px; color: var(--muted); }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 860px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+        }
+        .card-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 16px; font-weight: 700;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card-title .pill {
+            background: rgba(108,99,255,0.15);
+            color: var(--accent);
+            font-size: 11px; padding: 2px 8px; border-radius: 20px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group.full { grid-column: 1 / -1; }
+        label {
+            display: block; font-size: 12px; font-weight: 500;
+            color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.5px; margin-bottom: 7px;
+        }
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 10px; padding: 11px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; color: var(--text);
+            transition: all 0.2s; cursor: pointer;
+        }
+        select:focus, input:focus {
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+        }
+        select option { background: #1c2235; }
+
+        /* Property type chips */
+        .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .chip {
+            padding: 8px 16px; border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            font-size: 13px; color: var(--muted);
+            cursor: pointer; transition: all 0.2s;
+            user-select: none;
+        }
+        .chip.active {
+            border-color: var(--accent);
+            background: rgba(108,99,255,0.15);
+            color: var(--accent);
+        }
+        .slider-wrap { position: relative; }
+        .slider-val {
+            position: absolute; right: 0; top: -24px;
+            font-size: 13px; font-weight: 500; color: var(--accent2);
+        }
+         input[type="range"] {
+            appearance: none;
+            -webkit-appearance: none; width: 100%; height: 4px;
+            background: var(--surface2); border-radius: 4px;
+            border: none; padding: 0; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px; height: 18px;
+            background: var(--accent); border-radius: 50%;
+            cursor: pointer; border: 2px solid var(--bg);
+            box-shadow: 0 0 8px rgba(108,99,255,0.5);
+        }
+        .calc-btn {
+            position: relative;
+            width: 100%; height: 54px;
+            padding: 0;
+            background: transparent;
+            border: 1px solid rgba(108, 99, 255, 0.25);
+            border-radius: 12px;
+            box-shadow: inset 0 0 12px rgba(108, 99, 255, 0.15);
+            cursor: pointer;
+            margin-top: 8px;
+            overflow: visible;
+        }
+        .calc-btn::before {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            border-radius: 12px;
+            background: radial-gradient(circle at 100% -50%, rgba(108,99,255,0.55) 45%, rgba(155,89,182,0.3) 60%, rgba(108,99,255,0.2) 2%);
+            background-repeat: no-repeat;
+            filter: opacity(0.35) blur(0.3em);
+            pointer-events: none;
+        }
+        .calc-btn::after {
+            content: "";
+            position: absolute;
+            top: 120%; left: 0;
+            transform: perspective(1.5em) rotateX(35deg) scale(1, 0.6);
+            height: 100%; width: 100%;
+            background-color: #fbfd7b;
+            filter: blur(2em);
+            opacity: 0;
+            pointer-events: none;
+            border-radius: 12px;
+        }
+        .calc-btn p {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; height: 54px; margin: 0;
+            font-family: 'Syne', sans-serif;
+            font-size: 15px; font-weight: 800;
+            color: #c8c4ff;
+            letter-spacing: 0.3px;
+            filter: blur(0.02em);
+            position: relative; z-index: 5;
+            pointer-events: none;
+        }
+        .calc-btn:hover {
+            filter: blur(0.04em);
+            animation: calcLightBox 1s ease-in-out forwards;
+        }
+        .calc-btn:hover::after {
+            animation: calcLight 1s ease-in-out forwards;
+        }
+        .calc-btn:hover p {
+            animation: calcLightText 1s ease-in-out forwards;
+        }
+        .calc-btn:disabled {
+            opacity: 0.45; cursor: not-allowed;
+            animation: none !important; filter: none !important;
+        }
+        .calc-btn:disabled::after { animation: none !important; }
+        .calc-btn:disabled p { animation: none !important; color: #c8c4ff !important; text-shadow: none !important; }
+
+        @keyframes calcLightBox {
+            0%   { border: 1px solid #a78bfa; box-shadow: 0 0 5px #a78bfa88,  inset 0 0 10px #a78bfa88; }
+            20%  { border: 1px solid rgba(108,99,255,0.2); box-shadow: none; }
+            30%  { border: 1px solid #a78bfa; box-shadow: 0 0 10px #a78bfa88, inset 0 0 16px #a78bfa88; }
+            38%  { border: 1px solid rgba(108,99,255,0.2); box-shadow: none; }
+            45%  { border: 1px solid #a78bfa; box-shadow: 0 0 16px #a78bfa88, inset 0 0 22px #a78bfa88; }
+            50%  { border: 1px solid rgba(108,99,255,0.2); box-shadow: none; }
+            53%  { border: 1px solid #a78bfa; box-shadow: 0 0 18px #a78bfa88, inset 0 0 28px #a78bfa88; }
+            65%  { border: 1px solid rgba(108,99,255,0.2); box-shadow: none; }
+            100% { border: 1px solid #a78bfa; box-shadow: 0 0 18px #a78bfa88, inset 0 0 28px #a78bfa88; }
+        }
+        @keyframes calcLight {
+            0%,30%,45%,53%,100% { opacity: 0.65; }
+            20%,38%,50%,65%     { opacity: 0; }
+        }
+        @keyframes calcLightText {
+            0%   { color: #c4b5fd; text-shadow: 0 0 6px #a78bfa88; }
+            20%  { color: #e8eaf0; text-shadow: none; }
+            30%  { color: #c4b5fd; text-shadow: 0 0 10px #a78bfa88; }
+            38%  { color: #e8eaf0; text-shadow: none; }
+            45%  { color: #c4b5fd; text-shadow: 0 0 16px #a78bfa; }
+            50%  { color: #e8eaf0; text-shadow: none; }
+            53%  { color: #c4b5fd; text-shadow: 0 0 18px #a78bfa; }
+            65%  { color: #e8eaf0; text-shadow: none; }
+            100% { color: #c4b5fd; text-shadow: 0 0 18px #a78bfa; }
+        }
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* RESULTS PANEL */
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+        .result-price {
+            font-family: 'Syne', sans-serif;
+            font-size: 36px; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent2), #00b891);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 8px 0 4px;
+            letter-spacing: -1px;
+        }
+        .result-rate { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+        .breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .breakdown-item {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px;
+        }
+        .breakdown-val { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+        .breakdown-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+        /* Market insights */
+        .verify-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(108,99,255,0.07);
+            border: 1px solid rgba(108,99,255,0.15);
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 12px; color: var(--muted);
+            margin-bottom: 16px;
+        }
+        .verify-row strong { color: var(--accent2); }
+
+        .insight-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .insight-row:last-child { border-bottom: none; }
+        .insight-key { color: var(--muted); }
+        .insight-val { color: var(--text); font-weight: 500; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 8px; border-radius: 6px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge.up { background: rgba(0,212,170,0.12); color: var(--accent2); }
+        .badge.down { background: rgba(255,107,107,0.12); color: var(--error); }
+        .badge.mid { background: rgba(245,200,66,0.12); color: var(--gold); }
+
+        /* Save button */
+        .save-btn {
+            width: 100%; padding: 11px;
+            background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.25);
+            color: var(--accent2); border-radius: 10px;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+            cursor: pointer; margin-top: 16px;
+            transition: all 0.2s;
+        }
+        .save-btn:hover { background: rgba(0,212,170,0.18); }
+
+        /* HISTORY */
+        .history-item {
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: border-color 0.2s;
+        }
+        .history-item:hover { border-color: var(--accent); }
+        .hist-left .hist-city { font-size: 14px; font-weight: 500; }
+        .hist-left .hist-detail { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .hist-right { text-align: right; }
+        .hist-price { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--accent2); }
+        .hist-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .hist-del {
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-size: 14px; padding: 4px; margin-left: 10px;
+            border-radius: 4px; transition: color 0.2s;
+        }
+        .hist-del:hover { color: var(--error); }
+
+        .empty-state { text-align: center; padding: 24px; color: var(--muted); font-size: 14px; }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 20px;
+            font-size: 14px; color: var(--text);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+            z-index: 999; white-space: nowrap;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .placeholder-result {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 12px;
+            padding: 48px 20px;
+            color: var(--muted); text-align: center;
+        }
+        .placeholder-result .big { font-size: 40px; }
+        .placeholder-result p { font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<div class="toast" id="toast"></div>
+
+<div class="page">
+    <!-- NAV -->
+    <nav style="position:sticky;top:0;z-index:100;background:rgba(11,15,25,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;margin:0 -20px 0;width:calc(100% + 40px)">
+        <a href="dashboard.html" style="display:flex;align-items:center;gap:10px;text-decoration:none">
+            <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px">🏡</div>
+            <span style="font-family:Syne,sans-serif;font-size:17px;font-weight:800;color:var(--text);letter-spacing:-0.3px">Prop<span style="color:var(--accent2)">Smart</span></span>
+        </a>
+        <div style="display:flex;align-items:center;gap:4px">
+            <a href="dashboard.html" style="padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all 0.2s" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Dashboard</a>
+            <a href="house.html" style="padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--accent);text-decoration:none;background:rgba(108,99,255,0.12);border:1px solid rgba(108,99,255,0.2)">Estimator</a>
+            <a href="compare.html" style="padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all 0.2s" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">Compare</a>
+            <a href="emi.html" style="padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all 0.2s" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--muted)'">EMI Calc</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;color:var(--muted)">Hello, <strong id="userName" style="color:var(--text)">Guest</strong></span>
+            <button onclick="logout()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer;font-family:DM Sans,sans-serif;transition:all 0.2s" onmouseover="this.style.borderColor='var(--error)';this.style.color='var(--error)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Sign Out</button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1 class="hero-title">Smart Property <span class="grad">Valuation</span><br>Across India</h1>
+        <p class="hero-sub">AI-powered estimates covering all 28 states · Real market data · Instant results</p>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+        <!-- LEFT: ESTIMATOR FORM -->
+        <div>
+            <div class="card">
+                <div class="card-title">Property Details <span class="pill">Step 1 of 1</span></div>
+
+                <!-- Property type -->
+                <div class="form-group">
+                    <label>Property Type</label>
+                    <div class="chips" id="typeChips">
+                        <div class="chip active" data-type="apartment" onclick="selectChip(this, 'type')">🏢 Apartment</div>
+                        <div class="chip" data-type="villa" onclick="selectChip(this, 'type')">🏡 Villa / House</div>
+                        <div class="chip" data-type="plot" onclick="selectChip(this, 'type')">🌿 Plot / Land</div>
+                        <div class="chip" data-type="commercial" onclick="selectChip(this, 'type')">🏪 Commercial</div>
+                    </div>
+                </div>
+
+                <!-- State & City -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>📍 State</label>
+                        <select id="stateSelect" onchange="onStateChange()"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>🏙️ City / Locality</label>
+                        <select id="citySelect" onchange="onCityChange()"></select>
+                    </div>
+                </div>
+
+                <!-- BHK (only for apartment/villa) -->
+                <div class="form-group" id="bhkGroup">
+                    <label id="bhkLabel">🛏️ Configuration</label>
+                    <div class="chips" id="bhkChips">
+                        <div class="chip" data-bhk="1" onclick="selectChip(this,'bhk')">1 BHK</div>
+                        <div class="chip active" data-bhk="2" onclick="selectChip(this,'bhk')">2 BHK</div>
+                        <div class="chip" data-bhk="3" onclick="selectChip(this,'bhk')">3 BHK</div>
+                        <div class="chip" data-bhk="4" onclick="selectChip(this,'bhk')">4+ BHK</div>
+                    </div>
+                </div>
+
+                <!-- Area & Age -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>📐 Area (sq.ft)</label>
+                        <input type="number" id="areaInput" value="1200" min="100" max="50000" step="50">
+                    </div>
+                    <div class="form-group" id="ageGroup">
+                        <label>📅 Property Age (years)</label>
+                        <input type="number" id="ageInput" value="5" min="0" max="60" step="1">
+                    </div>
+                </div>
+
+                <!-- Condition (hidden for plot) -->
+                <div class="form-group" id="conditionGroup">
+                    <label>🔧 Condition</label>
+                    <div class="chips" id="conditionChips">
+                        <div class="chip" data-cond="new" onclick="selectChip(this,'condition')">New / Under Const.</div>
+                        <div class="chip active" data-cond="good" onclick="selectChip(this,'condition')">Good</div>
+                        <div class="chip" data-cond="average" onclick="selectChip(this,'condition')">Average</div>
+                        <div class="chip" data-cond="old" onclick="selectChip(this,'condition')">Needs Renovation</div>
+                    </div>
+                </div>
+
+                <!-- Floor (apartments) -->
+                <div class="form-group" id="floorGroup">
+                    <label>🏗️ Floor Level</label>
+                    <select id="floorSelect">
+                        <option value="ground">Ground Floor</option>
+                        <option value="low">Low Floor (1–5)</option>
+                        <option value="mid" selected>Mid Floor (6–15)</option>
+                        <option value="high">High Floor (16+)</option>
+                        <option value="penthouse">Penthouse</option>
+                    </select>
+                </div>
+
+                <button class="calc-btn" id="calcBtn" onclick="calculate()">
+                    <p><span>✨</span><span>Calculate Market Value</span></p>
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT: RESULTS + HISTORY -->
+        <div>
+            <!-- Results -->
+            <div id="resultArea">
+                <div class="card placeholder-result">
+                    <div class="big">🏘️</div>
+                    <p>Fill in the details and click<br><strong>Calculate Market Value</strong></p>
+                </div>
+            </div>
+
+            <!-- History -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title" style="justify-content:space-between">
+                    <span>📋 Saved Estimates</span>
+                    <button onclick="clearHistory()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif">Clear all</button>
+                </div>
+                <div id="historyList">
+                    <div class="empty-state">No saved estimates yet</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ── Auth check ─────────────────────────────────────────────────────────
+    const session = (() => {
+        try { return JSON.parse(sessionStorage.getItem('ps_session')); } catch { return null; }
+    })();
+    if (session) {
+        document.getElementById('userName').textContent = session.name || 'User';
+    }
+    function logout() {
+        sessionStorage.removeItem('ps_session');
+        window.location.href = 'login.html';
+    }
+    let selectedType = 'apartment';
+    let selectedBhk = '2';
+    let selectedCondition = 'good';
+    let currentCityBase = 0;
+    let lastResult = null;
+
+    const INDIA_DATA = {
+        "Andhra Pradesh": { "Visakhapatnam (Vizag)": 2500000, "Vijayawada": 2000000, "Amaravati (Capital Region)": 2200000, "Guntur": 1200000, "Tirupati": 1500000, "Kakinada": 800000, "Rajahmundry": 900000, "Nellore": 700000, "Kurnool": 600000, "Kadapa": 500000, "Anantapur": 500000, "Other / Rural Andhra Pradesh": 200000 },
+        "Arunachal Pradesh": { "Itanagar": 800000, "Tawang": 500000, "Naharlagun": 400000, "Rural Arunachal": 150000 },
+        "Assam": { "Guwahati": 1500000, "Silchar": 500000, "Dibrugarh": 600000, "Jorhat": 400000, "Rural Assam": 150000 },
+        "Bihar": { "Patna": 1800000, "Gaya": 600000, "Bhagalpur": 500000, "Muzaffarpur": 450000, "Rural Bihar": 120000 },
+        "Chhattisgarh": { "Raipur": 1200000, "Bhilai": 900000, "Bilaspur": 600000, "Durg": 500000, "Rural CG": 200000 },
+        "Goa": { "Panaji": 3500000, "Margao": 3000000, "Vasco da Gama": 2500000, "Coastal Areas": 4000000 },
+        "Gujarat": { "Ahmedabad": 2500000, "Surat": 2200000, "Vadodara": 1800000, "Rajkot": 1500000, "Gandhinagar": 2000000, "Rural Gujarat": 400000 },
+        "Haryana": { "Gurugram (Gurgaon)": 8000000, "Faridabad": 1500000, "Panipat": 800000, "Ambala": 600000, "Rural Haryana": 300000 },
+        "Himachal Pradesh": { "Shimla": 2500000, "Manali": 2000000, "Dharamshala": 1500000, "Solan": 1000000 },
+        "Jharkhand": { "Ranchi": 1200000, "Jamshedpur": 1000000, "Dhanbad": 600000, "Rural Jharkhand": 200000 },
+        "Karnataka": { "Bangalore (Whitefield)": 7000000, "Bangalore (Indiranagar)": 9000000, "Bangalore (Electronic City)": 5000000, "Mysore": 1500000, "Mangalore": 1200000, "Hubli": 500000, "Rural Karnataka": 300000 },
+        "Kerala": { "Kochi": 3000000, "Thiruvananthapuram": 2500000, "Kozhikode": 1500000, "Thrissur": 1200000, "Rural Kerala": 600000 },
+        "Madhya Pradesh": { "Indore": 1800000, "Bhopal": 1500000, "Gwalior": 800000, "Jabalpur": 700000, "Rural MP": 200000 },
+        "Maharashtra": { "Mumbai (South)": 25000000, "Mumbai (Suburbs)": 12000000, "Pune (Baner/Aundh)": 6000000, "Pune (Hadapsar)": 4000000, "Nagpur": 1200000, "Nashik": 1000000, "Rural Maharashtra": 400000 },
+        "Manipur": { "Imphal": 1000000, "Rural Manipur": 200000 },
+        "Meghalaya": { "Shillong": 1500000, "Rural Meghalaya": 200000 },
+        "Mizoram": { "Aizawl": 1200000, "Rural Mizoram": 200000 },
+        "Nagaland": { "Dimapur": 1000000, "Kohima": 800000, "Rural Nagaland": 200000 },
+        "Odisha": { "Bhubaneswar": 1500000, "Cuttack": 1000000, "Rourkela": 700000, "Rural Odisha": 200000 },
+        "Punjab": { "Ludhiana": 1500000, "Amritsar": 1200000, "Mohali (Tricity)": 3000000, "Chandigarh Periphery": 3500000, "Rural Punjab": 300000 },
+        "Rajasthan": { "Jaipur": 2000000, "Jodhpur": 1000000, "Udaipur": 1200000, "Kota": 800000, "Rural Rajasthan": 200000 },
+        "Sikkim": { "Gangtok": 2000000, "Rural Sikkim": 400000 },
+        "Tamil Nadu": { "Chennai (Anna Nagar)": 7000000, "Chennai (OMR/IT Corridor)": 5500000, "Chennai (Suburban)": 3000000, "Coimbatore": 2000000, "Madurai": 1000000, "Rural TN": 300000 },
+        "Telangana": { "Hyderabad (Jubilee Hills)": 9000000, "Hyderabad (Banjara Hills)": 8500000, "Hyderabad (Gachibowli)": 5500000, "Hyderabad (Madhapur)": 5000000, "Hyderabad (Kukatpally)": 3000000, "Hyderabad (Uppal)": 1500000, "Secunderabad": 2500000, "Warangal": 1500000, "Rural Telangana": 300000 },
+        "Tripura": { "Agartala": 1000000, "Rural Tripura": 150000 },
+        "Uttar Pradesh": { "Lucknow (Gomti Nagar)": 4500000, "Lucknow (Hazratganj)": 5000000, "Noida (Sector 18)": 7000000, "Noida (Greater Noida)": 4000000, "Kanpur": 3000000, "Agra": 2500000, "Varanasi": 2000000, "Ayodhya": 3500000, "Rural UP": 200000 },
+        "Uttarakhand": { "Dehradun": 2500000, "Haridwar": 1500000, "Nainital": 2000000, "Rishikesh": 1800000 },
+        "West Bengal": { "Kolkata (Salt Lake)": 4500000, "Kolkata (South)": 3500000, "Siliguri": 1200000, "Durgapur": 800000, "Rural WB": 250000 },
+        "Delhi (NCT)": { "South Delhi": 15000000, "Dwarka": 8000000, "Rohini": 5000000, "East Delhi": 4000000, "North Delhi": 4500000 }
+    };
+    const stateSelect = document.getElementById('stateSelect');
+    const citySelect = document.getElementById('citySelect');
+    Object.keys(INDIA_DATA).sort().forEach(s => {
+        const o = document.createElement('option'); o.value = s; o.textContent = s;
+        stateSelect.appendChild(o);
+    });
+    onStateChange();
+
+    function onStateChange() {
+        const state = stateSelect.value;
+        citySelect.innerHTML = '';
+        Object.keys(INDIA_DATA[state]).forEach(c => {
+            const o = document.createElement('option'); o.value = c; o.textContent = c;
+            citySelect.appendChild(o);
+        });
+        onCityChange();
+    }
+
+    function onCityChange() {
+        const state = stateSelect.value;
+        const city = citySelect.value;
+        currentCityBase = INDIA_DATA[state][city] || 1000000;
+    }
+    function selectChip(el, group) {
+        const container = document.getElementById(
+            group === 'type' ? 'typeChips' :
+            group === 'bhk' ? 'bhkChips' :
+            'conditionChips'
+        );
+        container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        if (group === 'type') {
+            selectedType = el.dataset.type;
+            const isPlot = selectedType === 'plot';
+
+            // BHK: hide for plot only
+            document.getElementById('bhkGroup').style.display = isPlot ? 'none' : '';
+            // Floor: apartment only
+            document.getElementById('floorGroup').style.display = selectedType === 'apartment' ? '' : 'none';
+            // Condition & Age: hide for plot (land doesn't depreciate or have condition)
+            document.getElementById('conditionGroup').style.display = isPlot ? 'none' : '';
+            document.getElementById('ageGroup').style.display = isPlot ? 'none' : '';
+
+            // Reset condition to 'good' when switching away from plot
+            if (!isPlot) { selectedCondition = 'good'; }
+
+            // Update BHK chips & label based on type
+            const bhkChips = document.getElementById('bhkChips');
+            const bhkLabel = document.getElementById('bhkLabel');
+            if (selectedType === 'commercial') {
+                bhkLabel.innerHTML = '🏢 Office / Shop Size';
+                bhkChips.innerHTML = `
+                    <div class="chip active" data-bhk="1" onclick="selectChip(this,'bhk')">Small (&lt; 500 sq.ft)</div>
+                    <div class="chip" data-bhk="2" onclick="selectChip(this,'bhk')">Medium (500–1500)</div>
+                    <div class="chip" data-bhk="3" onclick="selectChip(this,'bhk')">Large (1500–5000)</div>
+                    <div class="chip" data-bhk="4" onclick="selectChip(this,'bhk')">Showroom / Floor</div>`;
+            } else if (!isPlot) {
+                bhkLabel.innerHTML = '🛏️ Configuration';
+                bhkChips.innerHTML = `
+                    <div class="chip" data-bhk="1" onclick="selectChip(this,'bhk')">1 BHK</div>
+                    <div class="chip active" data-bhk="2" onclick="selectChip(this,'bhk')">2 BHK</div>
+                    <div class="chip" data-bhk="3" onclick="selectChip(this,'bhk')">3 BHK</div>
+                    <div class="chip" data-bhk="4" onclick="selectChip(this,'bhk')">4+ BHK</div>`;
+            }
+            selectedBhk = '2'; // reset to default
+        } else if (group === 'bhk') {
+            selectedBhk = el.dataset.bhk;
+        } else {
+            selectedCondition = el.dataset.cond;
+        }
+    }
+
+    function calculate() {
+        const area  = parseFloat(document.getElementById('areaInput').value) || 0;
+        const age   = selectedType === 'plot' ? 0 : (parseFloat(document.getElementById('ageInput').value) || 0);
+        if (area < 50) { showToast('⚠️ Please enter a valid area (min 50 sq.ft)'); return; }
+
+        const btn = document.getElementById('calcBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<p><div class="spinner"></div><span>Calculating...</span></p>';
+
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<p><span>✨</span><span>Calculate Market Value</span></p>';
+
+            const marketRatePerSqft = currentCityBase / 1200; 
+            if (selectedType === 'plot') {
+                const total    = Math.round(area * marketRatePerSqft / 1000) * 1000;
+                const ratePerSqft = Math.round(total / area);
+                lastResult = {
+                    total, land: total, building: 0,
+                    ratePerSqft, area, age: 0,
+                    city: document.getElementById('citySelect').value,
+                    state: document.getElementById('stateSelect').value,
+                    type: 'plot', bhk: '—', condition: '—'
+                };
+                renderResult(lastResult);
+                return;
+            }
+
+            // ── LAND share (60%) — unaffected by age/condition/floor ─────
+            const landRatePerSqft  = marketRatePerSqft * 0.60;
+            const landValue        = area * landRatePerSqft;
+
+            // ── BUILDING share (40% of market rate = new build benchmark) ─
+            const buildingRateNew  = marketRatePerSqft * 0.40;
+
+            // Age depreciation: 2.5% per year, floor at 20% of new value
+            const ageFactor = Math.max(Math.pow(0.975, age), 0.20);
+
+            // Condition factor — affects building only
+            const condMult = { new: 1.15, good: 1.0, average: 0.88, old: 0.72 };
+            const condFactor = condMult[selectedCondition] || 1.0;
+
+            // BHK / size config factor — affects building finish premium only
+            const bhkMult = { '1': 0.90, '2': 1.0, '3': 1.10, '4': 1.22 };
+            const bhkFactor = bhkMult[selectedBhk] || 1.0;
+
+            // Floor factor — apartment only, affects building only
+            const floorMult = { ground: 0.92, low: 0.96, mid: 1.0, high: 1.07, penthouse: 1.22 };
+            const floorVal  = document.getElementById('floorSelect').value;
+            const floorFactor = selectedType === 'apartment' ? (floorMult[floorVal] || 1.0) : 1.0;
+
+            // Commercial premium over residential
+            const typeFactor = selectedType === 'commercial' ? 1.30 : 1.0;
+
+            const buildingValue = area * buildingRateNew * ageFactor * condFactor * bhkFactor * floorFactor * typeFactor;
+            const total         = Math.round((landValue + buildingValue) / 1000) * 1000;
+            const ratePerSqft   = Math.round(total / area);
+
+            lastResult = {
+                total,
+                land:     Math.round(landValue),
+                building: Math.round(buildingValue),
+                ratePerSqft, area, age,
+                city:  document.getElementById('citySelect').value,
+                state: document.getElementById('stateSelect').value,
+                type: selectedType, bhk: selectedBhk, condition: selectedCondition
+            };
+
+            renderResult(lastResult);
+        }, 750);
+    }
+    function renderResult(r) {
+        const fmt = v => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+        const cityRatePerSqft = currentCityBase / 1200;
+        const ratio = r.ratePerSqft / cityRatePerSqft;
+        let posLabel, posClass;
+        if (ratio > 1.12)      { posLabel = '⬆ Above Market'; posClass = 'up'; }
+        else if (ratio < 0.88) { posLabel = '⬇ Below Market'; posClass = 'down'; }
+        else                   { posLabel = '↔ At Market Rate'; posClass = 'mid'; }
+
+        const typeLabels = { apartment: '🏢 Apartment', villa: '🏡 Villa / House', plot: '🌿 Plot / Land', commercial: '🏪 Commercial' };
+        const condLabels = { new: 'New / Under Construction', good: 'Good', average: 'Average', old: 'Needs Renovation' };
+        const commercialLabels = { '1': 'Small (< 500 sq.ft)', '2': 'Medium (500–1500 sq.ft)', '3': 'Large (1500–5000 sq.ft)', '4': 'Showroom / Full Floor' };
+
+        const configDisplay = r.type === 'commercial'
+            ? (commercialLabels[r.bhk] || r.bhk)
+            : r.bhk !== '—' ? r.bhk + ' BHK' : null;
+        const checksum = r.land + r.building;
+
+        document.getElementById('resultArea').innerHTML = `
+        <div class="result-card">
+            <div class="result-label">Estimated Market Value</div>
+            <div class="result-price">${fmt(r.total)}</div>
+            <div class="result-rate">₹${r.ratePerSqft.toLocaleString('en-IN')} per sq.ft &nbsp;·&nbsp; ${r.city}</div>
+
+            <div class="breakdown">
+                <div class="breakdown-item">
+                    <div class="breakdown-val">${fmt(r.land)}</div>
+                    <div class="breakdown-label">🌍 Land Value</div>
+                </div>
+                ${r.type !== 'plot'
+                    ? `<div class="breakdown-item">
+                        <div class="breakdown-val">${fmt(r.building)}</div>
+                        <div class="breakdown-label">🏗️ Construction Value</div>
+                       </div>`
+                    : `<div class="breakdown-item">
+                        <div class="breakdown-val">${Number(r.area).toLocaleString('en-IN')} sq.ft</div>
+                        <div class="breakdown-label">📐 Plot Area</div>
+                       </div>`
+                }
+            </div>
+
+            ${r.type !== 'plot' ? `
+            <div class="verify-row">
+                <span>Land + Construction</span>
+                <span>${fmt(r.land)} + ${fmt(r.building)} = <strong>${fmt(r.land + r.building)}</strong></span>
+            </div>` : ''}
+
+            <div class="insight-row">
+                <span class="insight-key">Market Position</span>
+                <span class="badge ${posClass}">${posLabel}</span>
+            </div>
+            <div class="insight-row">
+                <span class="insight-key">Property Type</span>
+                <span class="insight-val">${typeLabels[r.type]}</span>
+            </div>
+            ${configDisplay ? `
+            <div class="insight-row">
+                <span class="insight-key">Configuration</span>
+                <span class="insight-val">${configDisplay}</span>
+            </div>` : ''}
+            ${r.type !== 'plot' ? `
+            <div class="insight-row">
+                <span class="insight-key">Condition</span>
+                <span class="insight-val">${condLabels[r.condition] || r.condition}</span>
+            </div>
+            <div class="insight-row">
+                <span class="insight-key">Property Age</span>
+                <span class="insight-val">${r.age} year${r.age !== 1 ? 's' : ''}</span>
+            </div>` : ''}
+            <div class="insight-row">
+                <span class="insight-key">Built-up Area</span>
+                <span class="insight-val">${Number(r.area).toLocaleString('en-IN')} sq.ft</span>
+            </div>
+            <div class="insight-row">
+                <span class="insight-key">Rate per sq.ft</span>
+                <span class="insight-val">₹${r.ratePerSqft.toLocaleString('en-IN')}</span>
+            </div>
+
+            <button class="save-btn" onclick="saveEstimate()">💾 Save This Estimate</button>
+        </div>`;
+    }
+
+    // ── History ────────────────────────────────────────────────────────────
+    function getHistory() {
+        try { return JSON.parse(localStorage.getItem('ps_history') || '[]'); } catch { return []; }
+    }
+    function saveEstimate() {
+        if (!lastResult) return;
+        const history = getHistory();
+        history.unshift({ ...lastResult, savedAt: Date.now(), id: Date.now() });
+        if (history.length > 20) history.pop();
+        localStorage.setItem('ps_history', JSON.stringify(history));
+        renderHistory();
+        showToast('✅ Estimate saved!');
+    }
+    function clearHistory() {
+        localStorage.removeItem('ps_history');
+        renderHistory();
+    }
+    function deleteHistoryItem(id) {
+        const history = getHistory().filter(h => h.id !== id);
+        localStorage.setItem('ps_history', JSON.stringify(history));
+        renderHistory();
+    }
+    function renderHistory() {
+        const history = getHistory();
+        const container = document.getElementById('historyList');
+        if (!history.length) {
+            container.innerHTML = '<div class="empty-state">No saved estimates yet</div>';
+            return;
+        }
+        const fmt = v => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
+        const typeIcons = { apartment: '🏢', villa: '🏡', plot: '🌿', commercial: '🏪' };
+        container.innerHTML = history.map(h => `
+        <div class="history-item">
+            <div class="hist-left">
+                <div class="hist-city">${typeIcons[h.type] || '🏠'} ${h.city}</div>
+                <div class="hist-detail">${Number(h.area).toLocaleString()} sq.ft · ₹${(h.ratePerSqft||Math.round(h.total/h.area)).toLocaleString('en-IN')}/sqft · ${h.state}</div>
+            </div>
+            <div style="display:flex;align-items:center">
+                <div class="hist-right">
+                    <div class="hist-price">${fmt(h.total)}</div>
+                    <div class="hist-date">${new Date(h.savedAt).toLocaleDateString('en-IN')}</div>
+                </div>
+                <button class="hist-del" onclick="deleteHistoryItem(${h.id})" title="Remove">✕</button>
+            </div>
+        </div>`).join('');
+    }
+
+    // ── Toast ──────────────────────────────────────────────────────────────
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    renderHistory();
+</script>
+</body>
+</html>

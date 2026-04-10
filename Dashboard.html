@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PropSmart India — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0f19; --surface: #141927; --surface2: #1c2235;
+            --border: rgba(255,255,255,0.07); --accent: #6c63ff; --accent2: #00d4aa;
+            --text: #e8eaf0; --muted: #6b7280; --error: #ff6b6b; --gold: #f5c842;
+            --warn: #ff9f43;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+        .bg-mesh {
+            position:fixed; inset:0; z-index:0; pointer-events:none;
+            background:
+                radial-gradient(ellipse 60% 50% at 5% 15%, rgba(108,99,255,0.13) 0%, transparent 55%),
+                radial-gradient(ellipse 40% 35% at 95% 85%, rgba(0,212,170,0.08) 0%, transparent 55%),
+                radial-gradient(ellipse 30% 40% at 55% 5%, rgba(245,200,66,0.05) 0%, transparent 55%);
+            animation:meshMove 18s ease-in-out infinite alternate;
+        }
+        @keyframes meshMove { from{transform:scale(1)} to{transform:scale(1.03) rotate(0.5deg)} }
+        .bg-grid {
+            position:fixed; inset:0; z-index:0; pointer-events:none;
+            background-image:radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size:28px 28px;
+        }
+
+        /* NAV */
+        nav {
+            position:sticky; top:0; z-index:100;
+            background:rgba(11,15,25,0.85); backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border);
+            padding:0 32px; height:60px;
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        .nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+        .nav-logo {
+            width:34px; height:34px;
+            background:linear-gradient(135deg,var(--accent),var(--accent2));
+            border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px;
+        }
+        .nav-name { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.3px; }
+        .nav-name span { color:var(--accent2); }
+        .nav-links { display:flex; align-items:center; gap:4px; }
+        .nav-link {
+            padding:7px 14px; border-radius:8px; font-size:13px; font-weight:500;
+            color:var(--muted); text-decoration:none; transition:all 0.2s; border:1px solid transparent;
+        }
+        .nav-link:hover { color:var(--text); background:var(--surface2); }
+        .nav-link.active { color:var(--accent); background:rgba(108,99,255,0.12); border-color:rgba(108,99,255,0.2); }
+        .nav-right { display:flex; align-items:center; gap:10px; }
+        .nav-user { font-size:13px; color:var(--muted); }
+        .nav-user strong { color:var(--text); }
+        .nav-logout {
+            background:var(--surface2); border:1px solid var(--border); color:var(--muted);
+            font-size:12px; padding:6px 14px; border-radius:8px; cursor:pointer;
+            font-family:'DM Sans',sans-serif; transition:all 0.2s;
+        }
+        .nav-logout:hover { border-color:var(--error); color:var(--error); }
+
+        /* PAGE */
+        .page { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:36px 24px 80px; }
+
+        /* WELCOME */
+        .welcome { margin-bottom:36px; animation:fadeDown 0.6s ease both; }
+        .welcome-time { font-size:13px; color:var(--accent2); font-weight:500; margin-bottom:6px; letter-spacing:0.3px; }
+        .welcome-title { font-family:'Syne',sans-serif; font-size:clamp(22px,3vw,32px); font-weight:800; letter-spacing:-0.5px; }
+        .welcome-sub { font-size:14px; color:var(--muted); margin-top:6px; }
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+
+        /* STAT CARDS ROW */
+        .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+        @media(max-width:900px){ .stats-row { grid-template-columns:repeat(2,1fr); } }
+        @media(max-width:500px){ .stats-row { grid-template-columns:1fr; } }
+
+        .stat-card {
+            background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:20px 22px;
+            position:relative; overflow:hidden; cursor:default;
+            animation:fadeUp 0.6s ease both;
+            transition:transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.3); }
+        .stat-card::before {
+            content:''; position:absolute; top:-30px; right:-30px;
+            width:90px; height:90px; border-radius:50%;
+            opacity:0.08;
+        }
+        .stat-card.purple::before { background:var(--accent); }
+        .stat-card.teal::before   { background:var(--accent2); }
+        .stat-card.gold::before   { background:var(--gold); }
+        .stat-card.warn::before   { background:var(--warn); }
+        .stat-icon { font-size:22px; margin-bottom:12px; }
+        .stat-val {
+            font-family:'Syne',sans-serif; font-size:26px; font-weight:800; letter-spacing:-0.5px;
+            margin-bottom:4px;
+        }
+        .stat-card.purple .stat-val { color:var(--accent); }
+        .stat-card.teal   .stat-val { color:var(--accent2); }
+        .stat-card.gold   .stat-val { color:var(--gold); }
+        .stat-card.warn   .stat-val { color:var(--warn); }
+        .stat-label { font-size:13px; color:var(--muted); }
+        .stat-delta { font-size:11px; margin-top:6px; }
+        .stat-delta.up   { color:#4ade80; }
+        .stat-delta.down { color:var(--error); }
+
+        /* MAIN GRID */
+        .main-grid { display:grid; grid-template-columns:1fr 340px; gap:24px; align-items:start; }
+        @media(max-width:900px){ .main-grid { grid-template-columns:1fr; } }
+
+        /* CARD */
+        .card {
+            background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:24px;
+            animation:fadeUp 0.7s ease both;
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .card-header {
+            display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;
+        }
+        .card-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; }
+        .card-badge {
+            font-size:11px; padding:3px 10px; border-radius:20px;
+            background:rgba(108,99,255,0.12); color:var(--accent); font-weight:500;
+        }
+
+        /* QUICK ACTIONS */
+        .actions-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .action-btn {
+            display:flex; flex-direction:column; align-items:flex-start;
+            background:var(--surface2); border:1px solid var(--border);
+            border-radius:14px; padding:18px; cursor:pointer; text-decoration:none;
+            transition:all 0.25s ease; position:relative; overflow:hidden;
+        }
+        .action-btn::after {
+            content:''; position:absolute; inset:0;
+            background:linear-gradient(135deg, rgba(108,99,255,0.08), transparent);
+            opacity:0; transition:opacity 0.25s;
+        }
+        .action-btn:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 24px rgba(108,99,255,0.15); }
+        .action-btn:hover::after { opacity:1; }
+        .action-icon { font-size:26px; margin-bottom:10px; }
+        .action-title { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
+        .action-desc { font-size:12px; color:var(--muted); line-height:1.4; }
+        .action-arrow { position:absolute; top:16px; right:16px; color:var(--muted); font-size:16px; transition:all 0.2s; }
+        .action-btn:hover .action-arrow { color:var(--accent); transform:translate(2px,-2px); }
+
+        /* CITY MARKET TABLE */
+        .market-table { width:100%; border-collapse:collapse; }
+        .market-table th {
+            font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;
+            padding:0 12px 12px; text-align:left; font-weight:500; border-bottom:1px solid var(--border);
+        }
+        .market-table th:last-child { text-align:right; }
+        .market-table td {
+            padding:12px; font-size:13px; color:var(--text); border-bottom:1px solid rgba(255,255,255,0.03);
+        }
+        .market-table tr:last-child td { border-bottom:none; }
+        .market-table tr:hover td { background:rgba(255,255,255,0.02); }
+        .city-name { font-weight:500; }
+        .city-state { font-size:11px; color:var(--muted); margin-top:2px; }
+        .rate-val { font-family:'Syne',sans-serif; font-weight:700; color:var(--accent2); }
+        .trend { font-size:11px; font-weight:600; padding:2px 7px; border-radius:5px; float:right; }
+        .trend.up   { background:rgba(74,222,128,0.1); color:#4ade80; }
+        .trend.hot  { background:rgba(245,200,66,0.1); color:var(--gold); }
+        .trend.down { background:rgba(255,107,107,0.1); color:var(--error); }
+
+        /* PORTFOLIO */
+        .portfolio-item {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:12px 0; border-bottom:1px solid var(--border);
+        }
+        .portfolio-item:last-child { border-bottom:none; }
+        .port-left { display:flex; align-items:center; gap:12px; }
+        .port-icon {
+            width:38px; height:38px; border-radius:10px;
+            display:flex; align-items:center; justify-content:center; font-size:18px;
+            background:var(--surface2); border:1px solid var(--border); flex-shrink:0;
+        }
+        .port-city { font-size:14px; font-weight:500; }
+        .port-detail { font-size:12px; color:var(--muted); margin-top:2px; }
+        .port-right { text-align:right; }
+        .port-val { font-family:'Syne',sans-serif; font-size:15px; font-weight:700; color:var(--accent2); }
+        .port-date { font-size:11px; color:var(--muted); margin-top:2px; }
+
+        /* TIPS */
+        .tip-item {
+            display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--border);
+            align-items:flex-start;
+        }
+        .tip-item:last-child { border-bottom:none; }
+        .tip-icon { font-size:20px; flex-shrink:0; margin-top:1px; }
+        .tip-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+        .tip-body { font-size:12px; color:var(--muted); line-height:1.5; }
+
+        /* MINI CHART (CSS bar chart) */
+        .bar-chart { display:flex; align-items:flex-end; gap:6px; height:80px; margin-top:16px; }
+        .bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+        .bar {
+            width:100%; border-radius:4px 4px 0 0;
+            background:linear-gradient(to top, var(--accent), rgba(108,99,255,0.4));
+            transition:height 0.8s cubic-bezier(0.16,1,0.3,1);
+            min-height:4px;
+        }
+        .bar.teal { background:linear-gradient(to top, var(--accent2), rgba(0,212,170,0.4)); }
+        .bar-label { font-size:10px; color:var(--muted); white-space:nowrap; }
+
+        /* PROGRESS RING (CSS only) */
+        .ring-wrap { display:flex; align-items:center; gap:16px; margin-top:16px; }
+        .ring { width:64px; height:64px; position:relative; flex-shrink:0; }
+        .ring svg { width:100%; height:100%; transform:rotate(-90deg); }
+        .ring-bg { fill:none; stroke:var(--surface2); stroke-width:6; }
+        .ring-fill { fill:none; stroke-width:6; stroke-linecap:round; stroke-dasharray:170; transition:stroke-dashoffset 1s ease; }
+        .ring-text {
+            position:absolute; inset:0; display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+        }
+        .ring-info .ring-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+        .ring-info .ring-sub   { font-size:11px; color:var(--muted); }
+
+        .empty-port { text-align:center; padding:28px 0; color:var(--muted); font-size:13px; }
+        .empty-port .big { font-size:32px; margin-bottom:8px; }
+        .empty-link { color:var(--accent); text-decoration:none; font-weight:500; }
+        .empty-link:hover { text-decoration:underline; }
+
+        /* SECTION GAP */
+        .section-gap { margin-bottom:24px; }
+    </style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<!-- NAV -->
+<nav>
+    <a class="nav-brand" href="dashboard.html">
+        <div class="nav-logo">🏡</div>
+        <span class="nav-name">Prop<span>Smart</span></span>
+    </a>
+    <div class="nav-links">
+        <a class="nav-link active" href="dashboard.html">Dashboard</a>
+        <a class="nav-link" href="house.html">Estimator</a>
+        <a class="nav-link" href="compare.html">Compare</a>
+        <a class="nav-link" href="emi.html">EMI Calc</a>
+    </div>
+    <div class="nav-right">
+        <span class="nav-user">Hello, <strong id="userName">User</strong></span>
+        <button class="nav-logout" onclick="logout()">Sign Out</button>
+    </div>
+</nav>
+
+<div class="page">
+
+    <!-- WELCOME -->
+    <div class="welcome">
+        <div class="welcome-time" id="greeting">Good morning</div>
+        <h1 class="welcome-title" id="welcomeTitle">Welcome back 👋</h1>
+        <p class="welcome-sub">Here's your property intelligence summary for today.</p>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row section-gap">
+        <div class="stat-card purple" style="animation-delay:0.1s">
+            <div class="stat-icon">📊</div>
+            <div class="stat-val" id="statEstimates">0</div>
+            <div class="stat-label">Saved Estimates</div>
+            <div class="stat-delta up" id="statEstDelta"></div>
+        </div>
+        <div class="stat-card teal" style="animation-delay:0.2s">
+            <div class="stat-icon">💰</div>
+            <div class="stat-val" id="statPortfolio">₹0</div>
+            <div class="stat-label">Portfolio Value</div>
+            <div class="stat-delta up">Across all saved properties</div>
+        </div>
+        <div class="stat-card gold" style="animation-delay:0.3s">
+            <div class="stat-icon">🏙️</div>
+            <div class="stat-val" id="statCities">0</div>
+            <div class="stat-label">Cities Tracked</div>
+            <div class="stat-delta up" id="statCitiesDelta"></div>
+        </div>
+        <div class="stat-card warn" style="animation-delay:0.4s">
+            <div class="stat-icon">📈</div>
+            <div class="stat-val">₹12,500</div>
+            <div class="stat-label">Avg. Rate/sq.ft Today</div>
+            <div class="stat-delta up">↑ 3.2% vs last month</div>
+        </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+        <!-- LEFT COLUMN -->
+        <div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="card section-gap" style="animation-delay:0.2s">
+                <div class="card-header">
+                    <span class="card-title">⚡ Quick Actions</span>
+                </div>
+                <div class="actions-grid">
+                    <a class="action-btn" href="house.html">
+                        <div class="action-icon">🏡</div>
+                        <div class="action-title">New Estimate</div>
+                        <div class="action-desc">Calculate market value for any property across India</div>
+                        <span class="action-arrow">↗</span>
+                    </a>
+                    <a class="action-btn" href="compare.html">
+                        <div class="action-icon">⚖️</div>
+                        <div class="action-title">Compare Properties</div>
+                        <div class="action-desc">Side-by-side analysis of up to 3 properties</div>
+                        <span class="action-arrow">↗</span>
+                    </a>
+                    <a class="action-btn" href="emi.html">
+                        <div class="action-icon">🏦</div>
+                        <div class="action-title">EMI Calculator</div>
+                        <div class="action-desc">Loan eligibility, EMI breakdown & amortization</div>
+                        <span class="action-arrow">↗</span>
+                    </a>
+                    <a class="action-btn" href="house.html">
+                        <div class="action-icon">📋</div>
+                        <div class="action-title">My Estimates</div>
+                        <div class="action-desc">Review and manage your saved property valuations</div>
+                        <span class="action-arrow">↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- CITY MARKET RATES -->
+            <div class="card section-gap" style="animation-delay:0.3s">
+                <div class="card-header">
+                    <span class="card-title">🗺️ City Market Rates</span>
+                    <span class="card-badge">Live Reference</span>
+                </div>
+                <table class="market-table">
+                    <thead>
+                        <tr>
+                            <th>City</th>
+                            <th>Rate/sq.ft</th>
+                            <th>Type</th>
+                            <th style="text-align:right">Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><div class="city-name">Mumbai – South</div><div class="city-state">Maharashtra</div></td><td><span class="rate-val">₹20,833</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend hot">🔥 Premium</span></td></tr>
+                        <tr><td><div class="city-name">Delhi – South</div><div class="city-state">Delhi NCT</div></td><td><span class="rate-val">₹12,500</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend up">↑ Rising</span></td></tr>
+                        <tr><td><div class="city-name">Bangalore – Indiranagar</div><div class="city-state">Karnataka</div></td><td><span class="rate-val">₹7,500</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend up">↑ Hot</span></td></tr>
+                        <tr><td><div class="city-name">Hyderabad – Jubilee Hills</div><div class="city-state">Telangana</div></td><td><span class="rate-val">₹7,083</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend up">↑ Growing</span></td></tr>
+                        <tr><td><div class="city-name">Pune – Baner/Aundh</div><div class="city-state">Maharashtra</div></td><td><span class="rate-val">₹5,000</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend up">↑ Stable</span></td></tr>
+                        <tr><td><div class="city-name">Chennai – Anna Nagar</div><div class="city-state">Tamil Nadu</div></td><td><span class="rate-val">₹5,833</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend hot">🔥 High Demand</span></td></tr>
+                        <tr><td><div class="city-name">Gurugram</div><div class="city-state">Haryana</div></td><td><span class="rate-val">₹6,667</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend up">↑ Booming</span></td></tr>
+                        <tr><td><div class="city-name">Tirupati</div><div class="city-state">Andhra Pradesh</div></td><td><span class="rate-val">₹1,250</span></td><td style="color:var(--muted);font-size:12px">Residential</td><td><span class="trend up">↑ Emerging</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- MARKET TREND BAR CHART -->
+            <div class="card" style="animation-delay:0.4s">
+                <div class="card-header">
+                    <span class="card-title">📊 Monthly Activity</span>
+                    <span class="card-badge">Estimates Created</span>
+                </div>
+                <div class="bar-chart" id="barChart">
+                    <!-- rendered by JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+
+            <!-- PORTFOLIO / SAVED ESTIMATES -->
+            <div class="card section-gap" style="animation-delay:0.25s">
+                <div class="card-header">
+                    <span class="card-title">🏠 My Portfolio</span>
+                    <a href="house.html" style="font-size:12px;color:var(--accent);text-decoration:none">+ Add New</a>
+                </div>
+                <div id="portfolioList">
+                    <div class="empty-port">
+                        <div class="big">🏘️</div>
+                        <p>No saved estimates yet.</p>
+                        <p style="margin-top:6px"><a class="empty-link" href="house.html">Calculate your first property →</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROPERTY TYPE SPLIT -->
+            <div class="card section-gap" style="animation-delay:0.35s">
+                <div class="card-header">
+                    <span class="card-title">🍩 Portfolio Mix</span>
+                </div>
+                <div id="portfolioMix">
+                    <p style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">Save estimates to see your portfolio breakdown</p>
+                </div>
+            </div>
+
+            <!-- SMART TIPS -->
+            <div class="card" style="animation-delay:0.45s">
+                <div class="card-header">
+                    <span class="card-title">💡 Market Tips</span>
+                    <span class="card-badge">Today</span>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">📍</div>
+                    <div>
+                        <div class="tip-title">Buy in Tier-2 Cities Now</div>
+                        <div class="tip-body">Cities like Tirupati, Nashik, and Coimbatore are seeing 8–12% YoY appreciation with lower entry points.</div>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">🏗️</div>
+                    <div>
+                        <div class="tip-title">Under-Construction Premium</div>
+                        <div class="tip-body">New construction commands 15% premium but offers better amenities and no immediate renovation costs.</div>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">🏦</div>
+                    <div>
+                        <div class="tip-title">Loan-to-Value Ratio</div>
+                        <div class="tip-body">Banks typically fund 75–80% of property value. Use our EMI Calculator to plan your down payment strategy.</div>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">📈</div>
+                    <div>
+                        <div class="tip-title">Land Appreciates Fastest</div>
+                        <div class="tip-body">Plot investments in metro peripheries historically outperform apartments by 2–3× over 10-year periods.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auth
+    const session = (() => { try { return JSON.parse(sessionStorage.getItem('ps_session')); } catch { return null; } })();
+    if (session) {
+        document.getElementById('userName').textContent = session.name || 'User';
+        document.getElementById('welcomeTitle').textContent = `Welcome back, ${(session.name||'').split(' ')[0]} 👋`;
+    }
+    function logout() { sessionStorage.removeItem('ps_session'); window.location.href = 'login.html'; }
+
+    // Greeting
+    const hr = new Date().getHours();
+    document.getElementById('greeting').textContent =
+        hr < 12 ? 'Good morning ☀️' : hr < 17 ? 'Good afternoon 🌤️' : 'Good evening 🌙';
+
+    // Load history
+    function getHistory() { try { return JSON.parse(localStorage.getItem('ps_history') || '[]'); } catch { return []; } }
+    const history = getHistory();
+    const fmt = v => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(v);
+
+    // Stats
+    document.getElementById('statEstimates').textContent = history.length;
+    document.getElementById('statEstDelta').textContent = history.length > 0 ? `${history.length} property estimate${history.length>1?'s':''} saved` : 'Start by adding estimates';
+
+    const totalPortfolio = history.reduce((s,h) => s + (h.total||0), 0);
+    document.getElementById('statPortfolio').textContent = totalPortfolio > 0
+        ? (totalPortfolio >= 10000000 ? `₹${(totalPortfolio/10000000).toFixed(1)}Cr` : `₹${(totalPortfolio/100000).toFixed(1)}L`)
+        : '₹0';
+
+    const cities = [...new Set(history.map(h => h.city))];
+    document.getElementById('statCities').textContent = cities.length;
+    document.getElementById('statCitiesDelta').textContent = cities.length > 0 ? cities.slice(0,3).join(', ') : 'No cities yet';
+
+    // Portfolio list
+    if (history.length > 0) {
+        const icons = { apartment:'🏢', villa:'🏡', plot:'🌿', commercial:'🏪' };
+        document.getElementById('portfolioList').innerHTML = history.slice(0, 6).map(h => `
+            <div class="portfolio-item">
+                <div class="port-left">
+                    <div class="port-icon">${icons[h.type]||'🏠'}</div>
+                    <div>
+                        <div class="port-city">${h.city}</div>
+                        <div class="port-detail">${Number(h.area).toLocaleString()} sq.ft · ${h.state}</div>
+                    </div>
+                </div>
+                <div class="port-right">
+                    <div class="port-val">${fmt(h.total)}</div>
+                    <div class="port-date">${new Date(h.savedAt).toLocaleDateString('en-IN')}</div>
+                </div>
+            </div>`).join('');
+
+        // Portfolio mix
+        const counts = { apartment:0, villa:0, plot:0, commercial:0 };
+        history.forEach(h => { if(counts[h.type]!==undefined) counts[h.type]++; });
+        const total = history.length;
+        const mixItems = Object.entries(counts).filter(([,c])=>c>0).map(([t,c])=>{
+            const pct = Math.round((c/total)*100);
+            const colors = { apartment:['var(--accent)','rgba(108,99,255,0.1)'], villa:['var(--accent2)','rgba(0,212,170,0.1)'], plot:['var(--gold)','rgba(245,200,66,0.1)'], commercial:['var(--warn)','rgba(255,159,67,0.1)'] };
+            const names = { apartment:'🏢 Apartment', villa:'🏡 Villa', plot:'🌿 Plot', commercial:'🏪 Commercial' };
+            return `<div style="margin-bottom:12px">
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+                    <span>${names[t]}</span><span style="color:${colors[t][0]};font-weight:600">${pct}% (${c})</span>
+                </div>
+                <div style="height:6px;border-radius:3px;background:var(--surface2)">
+                    <div style="height:100%;width:${pct}%;border-radius:3px;background:${colors[t][0]};transition:width 1s ease"></div>
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('portfolioMix').innerHTML = mixItems || '<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0">No data yet</p>';
+    }
+
+    // Bar chart — estimates per month (last 6 months)
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const now = new Date();
+    const bars = [];
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const count = history.filter(h => {
+            const hd = new Date(h.savedAt);
+            return hd.getMonth() === d.getMonth() && hd.getFullYear() === d.getFullYear();
+        }).length;
+        bars.push({ label: months[d.getMonth()], count });
+    }
+    const maxBar = Math.max(...bars.map(b=>b.count), 1);
+    document.getElementById('barChart').innerHTML = bars.map((b,i) => `
+        <div class="bar-col">
+            <div class="bar ${i===5?'teal':''}" style="height:${Math.max((b.count/maxBar)*68,4)}px" title="${b.count} estimates"></div>
+            <div class="bar-label">${b.label}</div>
+        </div>`).join('');
+</script>
+</body>
+</html>

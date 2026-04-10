@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PropSmart India — Compare Properties</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#0b0f19; --surface:#141927; --surface2:#1c2235;
+            --border:rgba(255,255,255,0.07); --accent:#6c63ff; --accent2:#00d4aa;
+            --text:#e8eaf0; --muted:#6b7280; --error:#ff6b6b; --gold:#f5c842; --warn:#ff9f43;
+            --c1:#6c63ff; --c2:#00d4aa; --c3:#f5c842;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+        .bg-mesh {
+            position:fixed; inset:0; z-index:0; pointer-events:none;
+            background:
+                radial-gradient(ellipse 50% 40% at 15% 20%, rgba(108,99,255,0.1) 0%, transparent 55%),
+                radial-gradient(ellipse 40% 35% at 85% 80%, rgba(0,212,170,0.07) 0%, transparent 55%);
+            animation:meshMove 16s ease-in-out infinite alternate;
+        }
+        @keyframes meshMove { from{transform:scale(1)} to{transform:scale(1.03) rotate(0.5deg)} }
+        .bg-grid {
+            position:fixed; inset:0; z-index:0; pointer-events:none;
+            background-image:radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size:28px 28px;
+        }
+        nav {
+            position:sticky; top:0; z-index:100;
+            background:rgba(11,15,25,0.85); backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border); padding:0 32px; height:60px;
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        .nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+        .nav-logo { width:34px; height:34px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:17px; }
+        .nav-name { font-family:'Syne',sans-serif; font-size:17px; font-weight:800; color:var(--text); letter-spacing:-0.3px; }
+        .nav-name span { color:var(--accent2); }
+        .nav-links { display:flex; align-items:center; gap:4px; }
+        .nav-link { padding:7px 14px; border-radius:8px; font-size:13px; font-weight:500; color:var(--muted); text-decoration:none; transition:all 0.2s; border:1px solid transparent; }
+        .nav-link:hover { color:var(--text); background:var(--surface2); }
+        .nav-link.active { color:var(--accent); background:rgba(108,99,255,0.12); border-color:rgba(108,99,255,0.2); }
+        .nav-right { display:flex; align-items:center; gap:10px; }
+        .nav-user { font-size:13px; color:var(--muted); }
+        .nav-user strong { color:var(--text); }
+        .nav-logout { background:var(--surface2); border:1px solid var(--border); color:var(--muted); font-size:12px; padding:6px 14px; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+        .nav-logout:hover { border-color:var(--error); color:var(--error); }
+
+        .page { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:36px 24px 80px; }
+
+        .hero { text-align:center; margin-bottom:36px; animation:fadeDown 0.6s ease both; }
+        .hero-title { font-family:'Syne',sans-serif; font-size:clamp(24px,3.5vw,38px); font-weight:800; letter-spacing:-0.8px; margin-bottom:8px; }
+        .hero-title .grad { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .hero-sub { font-size:15px; color:var(--muted); }
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+        /* PROPERTY SLOTS */
+        .slots-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+        @media(max-width:800px){ .slots-grid { grid-template-columns:1fr; } }
+
+        .slot {
+            background:var(--surface); border:2px dashed rgba(255,255,255,0.1);
+            border-radius:20px; padding:24px; animation:fadeUp 0.6s ease both;
+            transition:border-color 0.2s;
+        }
+        .slot.filled { border-style:solid; }
+        .slot-1.filled { border-color:rgba(108,99,255,0.4); }
+        .slot-2.filled { border-color:rgba(0,212,170,0.4); }
+        .slot-3.filled { border-color:rgba(245,200,66,0.4); }
+
+        .slot-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .slot-num {
+            width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+            font-family:'Syne',sans-serif; font-size:13px; font-weight:800;
+        }
+        .slot-1 .slot-num { background:rgba(108,99,255,0.2); color:var(--c1); }
+        .slot-2 .slot-num { background:rgba(0,212,170,0.2); color:var(--c2); }
+        .slot-3 .slot-num { background:rgba(245,200,66,0.2); color:var(--c3); }
+        .slot-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; transition:color 0.2s; padding:2px 6px; border-radius:4px; }
+        .slot-clear:hover { color:var(--error); }
+
+        label { display:block; font-size:11px; font-weight:500; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+        select, input[type="number"] {
+            width:100%; background:var(--surface2); border:1px solid var(--border);
+            border-radius:10px; padding:10px 14px; font-family:'DM Sans',sans-serif;
+            font-size:13px; color:var(--text); transition:all 0.2s; cursor:pointer; margin-bottom:12px;
+        }
+        select:focus, input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(108,99,255,0.1); }
+        select option { background:#1c2235; }
+
+        .chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+        .chip { padding:6px 12px; border-radius:7px; border:1px solid var(--border); background:var(--surface2); font-size:12px; color:var(--muted); cursor:pointer; transition:all 0.2s; user-select:none; }
+        .chip.active-1 { border-color:var(--c1); background:rgba(108,99,255,0.12); color:var(--c1); }
+        .chip.active-2 { border-color:var(--c2); background:rgba(0,212,170,0.12); color:var(--c2); }
+        .chip.active-3 { border-color:var(--c3); background:rgba(245,200,66,0.12); color:var(--c3); }
+
+        .calc-btn {
+            width:100%; padding:12px; border:none; border-radius:10px;
+            font-family:'Syne',sans-serif; font-size:13px; font-weight:700; cursor:pointer;
+            transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:6px;
+            margin-top:4px;
+        }
+        .slot-1 .calc-btn { background:rgba(108,99,255,0.15); color:var(--c1); }
+        .slot-2 .calc-btn { background:rgba(0,212,170,0.15); color:var(--c2); }
+        .slot-3 .calc-btn { background:rgba(245,200,66,0.15); color:var(--c3); }
+        .slot-1 .calc-btn:hover { background:rgba(108,99,255,0.28); }
+        .slot-2 .calc-btn:hover { background:rgba(0,212,170,0.28); }
+        .slot-3 .calc-btn:hover { background:rgba(245,200,66,0.28); }
+
+        .slot-result { margin-top:16px; padding:14px; background:var(--surface2); border-radius:12px; border:1px solid var(--border); }
+        .res-price { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; margin-bottom:2px; }
+        .slot-1 .res-price { color:var(--c1); }
+        .slot-2 .res-price { color:var(--c2); }
+        .slot-3 .res-price { color:var(--c3); }
+        .res-rate { font-size:12px; color:var(--muted); }
+
+        /* COMPARE TABLE */
+        .compare-section { animation:fadeUp 0.6s ease 0.3s both; }
+        .compare-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+        .compare-table { width:100%; border-collapse:collapse; }
+        .compare-table th {
+            padding:16px 20px; text-align:center; font-family:'Syne',sans-serif; font-size:13px; font-weight:700;
+            border-bottom:2px solid var(--border); background:var(--surface2);
+        }
+        .compare-table th.row-label { text-align:left; color:var(--muted); font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:0.4px; }
+        .compare-table th.col-1 { color:var(--c1); border-bottom-color:var(--c1); }
+        .compare-table th.col-2 { color:var(--c2); border-bottom-color:var(--c2); }
+        .compare-table th.col-3 { color:var(--c3); border-bottom-color:var(--c3); }
+        .compare-table td { padding:13px 20px; text-align:center; border-bottom:1px solid var(--border); font-size:13px; }
+        .compare-table tr:last-child td { border-bottom:none; }
+        .compare-table tr:hover td { background:rgba(255,255,255,0.02); }
+        .compare-table td.row-label { text-align:left; color:var(--muted); font-size:12px; font-weight:500; }
+        .compare-table td.winner { font-weight:700; }
+        .compare-table td.winner-1 { color:var(--c1); }
+        .compare-table td.winner-2 { color:var(--c2); }
+        .compare-table td.winner-3 { color:var(--c3); }
+        .compare-table td.empty-cell { color:var(--muted); font-style:italic; font-size:12px; }
+        .best-badge {
+            display:inline-block; font-size:10px; font-weight:700; padding:2px 7px;
+            border-radius:4px; margin-left:6px;
+        }
+        .best-1 { background:rgba(108,99,255,0.15); color:var(--c1); }
+        .best-2 { background:rgba(0,212,170,0.15); color:var(--c2); }
+        .best-3 { background:rgba(245,200,66,0.15); color:var(--c3); }
+
+        .no-compare {
+            text-align:center; padding:60px 20px; color:var(--muted);
+        }
+        .no-compare .big { font-size:48px; margin-bottom:12px; }
+        .no-compare p { font-size:14px; }
+
+        .spinner { width:14px; height:14px; border:2px solid rgba(255,255,255,0.2); border-top-color:currentColor; border-radius:50%; animation:spin 0.7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<nav>
+    <a class="nav-brand" href="dashboard.html">
+        <div class="nav-logo">🏡</div>
+        <span class="nav-name">Prop<span>Smart</span></span>
+    </a>
+    <div class="nav-links">
+        <a class="nav-link" href="dashboard.html">Dashboard</a>
+        <a class="nav-link" href="house.html">Estimator</a>
+        <a class="nav-link active" href="compare.html">Compare</a>
+        <a class="nav-link" href="emi.html">EMI Calc</a>
+    </div>
+    <div class="nav-right">
+        <span class="nav-user">Hello, <strong id="userName">User</strong></span>
+        <button class="nav-logout" onclick="logout()">Sign Out</button>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="hero">
+        <h1 class="hero-title">Side-by-Side <span class="grad">Property Comparison</span></h1>
+        <p class="hero-sub">Fill up to 3 properties and instantly compare valuations, rates, and key metrics</p>
+    </div>
+
+    <!-- PROPERTY SLOTS -->
+    <div class="slots-grid" id="slotsGrid"></div>
+
+    <!-- COMPARE TABLE -->
+    <div class="compare-section">
+        <div id="compareArea">
+            <div class="compare-card">
+                <div class="no-compare">
+                    <div class="big">⚖️</div>
+                    <p>Calculate at least 2 properties above to see the comparison</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const session = (() => { try { return JSON.parse(sessionStorage.getItem('ps_session')); } catch { return null; } })();
+    if (session) document.getElementById('userName').textContent = session.name || 'User';
+    function logout() { sessionStorage.removeItem('ps_session'); window.location.href = 'login.html'; }
+
+    const INDIA_DATA = {
+        "Andhra Pradesh":{"Visakhapatnam (Vizag)":2500000,"Vijayawada":2000000,"Amaravati":2200000,"Guntur":1200000,"Tirupati":1500000,"Kakinada":800000,"Nellore":700000,"Kurnool":600000},
+        "Goa":{"Panaji":3500000,"Margao":3000000,"Coastal Areas":4000000},
+        "Gujarat":{"Ahmedabad":2500000,"Surat":2200000,"Vadodara":1800000,"Rajkot":1500000,"Gandhinagar":2000000},
+        "Haryana":{"Gurugram (Gurgaon)":8000000,"Faridabad":1500000,"Panipat":800000,"Ambala":600000},
+        "Karnataka":{"Bangalore (Whitefield)":7000000,"Bangalore (Indiranagar)":9000000,"Bangalore (Electronic City)":5000000,"Mysore":1500000,"Mangalore":1200000},
+        "Kerala":{"Kochi":3000000,"Thiruvananthapuram":2500000,"Kozhikode":1500000,"Thrissur":1200000},
+        "Madhya Pradesh":{"Indore":1800000,"Bhopal":1500000,"Gwalior":800000,"Jabalpur":700000},
+        "Maharashtra":{"Mumbai (South)":25000000,"Mumbai (Suburbs)":12000000,"Pune (Baner/Aundh)":6000000,"Pune (Hadapsar)":4000000,"Nagpur":1200000,"Nashik":1000000},
+        "Punjab":{"Ludhiana":1500000,"Amritsar":1200000,"Mohali (Tricity)":3000000},
+        "Rajasthan":{"Jaipur":2000000,"Jodhpur":1000000,"Udaipur":1200000,"Kota":800000},
+        "Tamil Nadu":{"Chennai (Anna Nagar)":7000000,"Chennai (OMR/IT Corridor)":5500000,"Coimbatore":2000000,"Madurai":1000000},
+        "Telangana":{"Hyderabad (Jubilee Hills)":9000000,"Hyderabad (Banjara Hills)":8500000,"Hyderabad (Gachibowli)":5500000,"Hyderabad (Kukatpally)":3000000,"Secunderabad":2500000,"Warangal":1500000},
+        "Uttar Pradesh":{"Lucknow (Gomti Nagar)":4500000,"Noida (Sector 18)":7000000,"Kanpur":3000000,"Agra":2500000,"Varanasi":2000000},
+        "West Bengal":{"Kolkata (Salt Lake)":4500000,"Kolkata (South)":3500000,"Siliguri":1200000},
+        "Delhi (NCT)":{"South Delhi":15000000,"Dwarka":8000000,"Rohini":5000000,"East Delhi":4000000}
+    };
+
+    const results = [null, null, null];
+    const colors = ['var(--c1)','var(--c2)','var(--c3)'];
+    const colorNames = ['purple','teal','gold'];
+    const slotNums = ['A','B','C'];
+    const fmt = v => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(v);
+
+    function buildSlots() {
+        document.getElementById('slotsGrid').innerHTML = [0,1,2].map(i => `
+        <div class="slot slot-${i+1}" id="slot${i}">
+            <div class="slot-header">
+                <div class="slot-num">${slotNums[i]}</div>
+                <button class="slot-clear" onclick="clearSlot(${i})" title="Clear">✕</button>
+            </div>
+
+            <label>📍 State</label>
+            <select id="s${i}_state" onchange="populateCity(${i})">
+                ${Object.keys(INDIA_DATA).sort().map(s=>`<option value="${s}">${s}</option>`).join('')}
+            </select>
+
+            <label>🏙️ City</label>
+            <select id="s${i}_city"></select>
+
+            <label>🏠 Property Type</label>
+            <div class="chips" id="s${i}_typeChips">
+                <div class="chip active-${i+1}" data-v="apartment" onclick="pickChip(this,${i},'type')">🏢 Apt</div>
+                <div class="chip" data-v="villa" onclick="pickChip(this,${i},'type')">🏡 Villa</div>
+                <div class="chip" data-v="plot" onclick="pickChip(this,${i},'type')">🌿 Plot</div>
+                <div class="chip" data-v="commercial" onclick="pickChip(this,${i},'type')">🏪 Comm.</div>
+            </div>
+
+            <label>📐 Area (sq.ft)</label>
+            <input type="number" id="s${i}_area" value="1200" min="100" step="50">
+
+            <div id="s${i}_ageWrap">
+                <label>📅 Age (years)</label>
+                <input type="number" id="s${i}_age" value="5" min="0" max="60">
+            </div>
+
+            <div id="s${i}_condWrap">
+                <label>🔧 Condition</label>
+                <div class="chips" id="s${i}_condChips">
+                    <div class="chip" data-v="new" onclick="pickChip(this,${i},'cond')">New</div>
+                    <div class="chip active-${i+1}" data-v="good" onclick="pickChip(this,${i},'cond')">Good</div>
+                    <div class="chip" data-v="average" onclick="pickChip(this,${i},'cond')">Average</div>
+                    <div class="chip" data-v="old" onclick="pickChip(this,${i},'cond')">Old</div>
+                </div>
+            </div>
+
+            <button class="calc-btn" id="s${i}_btn" onclick="calcSlot(${i})">✨ Calculate</button>
+            <div id="s${i}_result" style="display:none" class="slot-result">
+                <div class="res-price" id="s${i}_price"></div>
+                <div class="res-rate" id="s${i}_rate"></div>
+            </div>
+        </div>`).join('');
+
+        // init state selections offset so slots differ
+        [0,1,2].forEach(i => {
+            const sel = document.getElementById(`s${i}_state`);
+            const states = Object.keys(INDIA_DATA).sort();
+            sel.value = states[i * 4 % states.length];
+            populateCity(i);
+        });
+    }
+
+    function populateCity(i) {
+        const state = document.getElementById(`s${i}_state`).value;
+        const cityEl = document.getElementById(`s${i}_city`);
+        cityEl.innerHTML = Object.keys(INDIA_DATA[state]).map(c=>`<option value="${c}">${c}</option>`).join('');
+    }
+
+    function pickChip(el, slotIdx, group) {
+        const container = document.getElementById(`s${slotIdx}_${group}Chips`);
+        container.querySelectorAll('.chip').forEach(c => c.className = 'chip');
+        el.className = `chip active-${slotIdx+1}`;
+        if (group === 'type') {
+            const isPlot = el.dataset.v === 'plot';
+            document.getElementById(`s${slotIdx}_ageWrap`).style.display = isPlot ? 'none' : '';
+            document.getElementById(`s${slotIdx}_condWrap`).style.display = isPlot ? 'none' : '';
+        }
+    }
+
+    function getChipVal(slotIdx, group) {
+        const chips = document.getElementById(`s${slotIdx}_${group}Chips`);
+        if (!chips) return null;
+        const active = chips.querySelector(`.chip.active-${slotIdx+1}`);
+        return active ? active.dataset.v : null;
+    }
+
+    function calcSlot(i) {
+        const btn = document.getElementById(`s${i}_btn`);
+        btn.innerHTML = '<div class="spinner"></div> Calculating...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.innerHTML = '✨ Calculate'; btn.disabled = false;
+
+            const state  = document.getElementById(`s${i}_state`).value;
+            const city   = document.getElementById(`s${i}_city`).value;
+            const area   = parseFloat(document.getElementById(`s${i}_area`).value) || 0;
+            const type   = getChipVal(i,'type') || 'apartment';
+            const cond   = getChipVal(i,'cond') || 'good';
+            const age    = type === 'plot' ? 0 : (parseFloat(document.getElementById(`s${i}_age`).value)||0);
+
+            if (area < 50) { alert('Please enter a valid area'); return; }
+
+            const cityBase = INDIA_DATA[state][city] || 1000000;
+            const mkt = cityBase / 1200;
+
+            if (type === 'plot') {
+                const total = Math.round(area * mkt / 1000) * 1000;
+                results[i] = { total, land:total, building:0, ratePerSqft:Math.round(total/area), area, age:0, city, state, type, cond:'—', bhk:'—' };
+            } else {
+                const landVal  = area * mkt * 0.60;
+                const bldgNew  = area * mkt * 0.40;
+                const ageFac   = Math.max(Math.pow(0.975,age), 0.20);
+                const condFac  = {new:1.15,good:1.0,average:0.88,old:0.72}[cond]||1.0;
+                const typeFac  = type==='commercial' ? 1.30 : 1.0;
+                const bldgVal  = bldgNew * ageFac * condFac * typeFac;
+                const total    = Math.round((landVal+bldgVal)/1000)*1000;
+                results[i] = { total, land:Math.round(landVal), building:Math.round(bldgVal), ratePerSqft:Math.round(total/area), area, age, city, state, type, cond, bhk:'—' };
+            }
+
+            document.getElementById(`s${i}_result`).style.display = '';
+            document.getElementById(`s${i}_price`).textContent = fmt(results[i].total);
+            document.getElementById(`s${i}_rate`).textContent = `₹${results[i].ratePerSqft.toLocaleString('en-IN')}/sq.ft · ${city}`;
+            document.getElementById(`slot${i}`).classList.add('filled');
+
+            renderCompare();
+        }, 600);
+    }
+
+    function clearSlot(i) {
+        results[i] = null;
+        document.getElementById(`s${i}_result`).style.display = 'none';
+        document.getElementById(`slot${i}`).classList.remove('filled');
+        renderCompare();
+    }
+
+    function renderCompare() {
+        const filled = results.filter(Boolean);
+        if (filled.length < 2) {
+            document.getElementById('compareArea').innerHTML = `<div class="compare-card"><div class="no-compare"><div class="big">⚖️</div><p>Calculate at least 2 properties above to see the comparison</p></div></div>`;
+            return;
+        }
+
+        const headers = results.map((r,i) => r
+            ? `<th class="col-${i+1}">${slotNums[i]} — ${r.city.split('(')[0].trim()}</th>`
+            : `<th style="color:var(--muted)">—</th>`).join('');
+
+        const winIdx = (arr, higherBetter=true) => {
+            let best = -1, bestVal = higherBetter ? -Infinity : Infinity;
+            arr.forEach((v,i) => {
+                if (v===null) return;
+                if (higherBetter ? v>bestVal : v<bestVal) { bestVal=v; best=i; }
+            });
+            return best;
+        };
+
+        const row = (label, vals, higherBetter=true, fmtFn=v=>v) => {
+            const w = winIdx(vals, higherBetter);
+            return `<tr>
+                <td class="row-label">${label}</td>
+                ${vals.map((v,i) => v===null
+                    ? `<td class="empty-cell">—</td>`
+                    : `<td class="${i===w?`winner winner-${i+1}`:''}">${fmtFn(v)}${i===w?`<span class="best-badge best-${i+1}">BEST</span>`:''}</td>`
+                ).join('')}
+            </tr>`;
+        };
+
+        const vals  = results.map(r => r ? r.total : null);
+        const rates = results.map(r => r ? r.ratePerSqft : null);
+        const lands = results.map(r => r ? r.land : null);
+        const bldgs = results.map(r => r ? (r.building||0) : null);
+        const areas = results.map(r => r ? r.area : null);
+        const ages  = results.map(r => r ? r.age : null);
+        const types = results.map(r => r ? ({apartment:'🏢 Apartment',villa:'🏡 Villa',plot:'🌿 Plot',commercial:'🏪 Commercial'}[r.type]||r.type) : null);
+        const conds = results.map(r => r ? ({new:'New',good:'Good',average:'Average',old:'Needs Renovation','—':'—'}[r.cond]||r.cond) : null);
+        const cityNames = results.map(r => r ? r.city : null);
+        const states = results.map(r => r ? r.state : null);
+
+        // Value per sqft efficiency (lower age + good condition = better)
+        const efficiency = results.map(r => r ? Math.round((r.land / r.total)*100) : null);
+
+        document.getElementById('compareArea').innerHTML = `
+        <div class="compare-card">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th class="row-label">Metric</th>
+                        ${headers}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${row('💰 Total Value', vals, true, fmt)}
+                    ${row('📐 Rate per sq.ft', rates, false, v=>`₹${v.toLocaleString('en-IN')}`)}
+                    ${row('🌍 Land Value', lands, true, fmt)}
+                    ${row('🏗️ Construction Value', bldgs, true, v=>v>0?fmt(v):'—')}
+                    ${row('📏 Area', areas, true, v=>`${v.toLocaleString()} sq.ft`)}
+                    <tr><td class="row-label">📍 City</td>${cityNames.map((v,i)=>v?`<td>${v}</td>`:`<td class="empty-cell">—</td>`).join('')}</tr>
+                    <tr><td class="row-label">🗺️ State</td>${states.map((v,i)=>v?`<td>${v}</td>`:`<td class="empty-cell">—</td>`).join('')}</tr>
+                    <tr><td class="row-label">🏠 Type</td>${types.map(v=>v?`<td>${v}</td>`:`<td class="empty-cell">—</td>`).join('')}</tr>
+                    <tr><td class="row-label">🔧 Condition</td>${conds.map(v=>v?`<td>${v}</td>`:`<td class="empty-cell">—</td>`).join('')}</tr>
+                    ${row('📅 Property Age', ages, false, v=>`${v} yr${v!==1?'s':''}`)}
+                    ${row('🌍 Land Share %', efficiency, true, v=>`${v}%`)}
+                </tbody>
+            </table>
+        </div>`;
+    }
+
+    buildSlots();
+</script>
+</body>
+</html>
